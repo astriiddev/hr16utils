@@ -1,3 +1,6 @@
+#ifndef __FLIP_H
+#define __FLIP_H
+
 /* HR16 ROM tools
  * flip.h - prototypes for the ROM loading, saving and flipping
  *
@@ -19,6 +22,11 @@
  * MA 02111-1307, USA.
  */
 
-extern int flip(char *buffer);
-extern int set_offset(char *buffer, int sample, int offset);
-extern int set_title(char *buffer, int sample, char *title, int centre);
+#define BITFLIP(b) ((b) & 0x80) >> 7 | ((b) & 0x40) >> 5 | ((b) & 0x20) >> 3 | ((b) & 0x10) >> 1 | \
+                   ((b) & 0x08) << 1 | ((b) & 0x04) << 3 | ((b) & 0x02) << 5 | ((b) & 0x01) << 7
+
+int flip(unsigned char *buffer);
+void set_title(unsigned char *buffer, int sample, char *title, int centre);
+int set_offset(unsigned char *buffer, int sample, int offset);
+
+#endif /* __FLIP_H */

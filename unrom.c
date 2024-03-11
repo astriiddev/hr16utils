@@ -9,7 +9,8 @@
 
 #define ROMSIZE 1048576
 
-int main(char *argv, int argc) {
+int main(void) 
+{
     FILE *file;
     SNDFILE *out;
     SF_INFO info;
@@ -18,26 +19,34 @@ int main(char *argv, int argc) {
     
     float gain=1;
     int rom_p=0, sample_p=0;
-    int got_marker;
+    int got_marker = 0;
     
     info.format=SF_FORMAT_WAV | SF_FORMAT_PCM_16;  
     info.channels=1;  
     info.samplerate=32000;  
-    
-    
 
     file = fopen("srsample.bin","rb");
+
     rom = malloc(sizeof(char)*ROMSIZE);
-    fread(rom,1,ROMSIZE,file);
+
+    if(fread(rom,1,ROMSIZE,file) < ROMSIZE)
+    {
+        printf("Error while reading firmware!\n");
+        free(rom);
+        fclose(file);
+        return -1;
+    }
+
+
     fclose(file);
     
-    sample = malloc(sizeof(float)*ROMSIZE); // way bigger than it needs to be
-    memset(sample, 0, sizeof(float)*ROMSIZE); // may not be safe on all systems
+    sample = malloc(sizeof(float)*ROMSIZE); /*  way bigger than it needs to be */
+    memset(sample, 0, sizeof(float)*ROMSIZE); /*  may not be safe on all systems */
     for(rom_p=0; rom_p<ROMSIZE; rom_p++) {
         if (rom[rom_p] == -128) {
             if (got_marker) {
                 printf("sample end %05x\n",rom_p);
-                rom_p = (rom_p & 0xffff0) + 0x10; // 16-byte boundaries
+                rom_p = (rom_p & 0xffff0) + 0x10; /*  16-byte boundaries */
                 gain = 2;
             }
             got_marker = 1;
@@ -56,6 +65,6 @@ int main(char *argv, int argc) {
     sf_close(out);
     free(sample);
     free(rom);
-    return(0);
 
+    return 0;
 }

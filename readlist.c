@@ -29,9 +29,10 @@
 
 
 
-int main() {
+int main() 
+{
   FILE *file;
-  // processing each line
+  /*  processing each line */
   char line[128];
   char title[16];
   char centre[2];
@@ -42,13 +43,11 @@ int main() {
   SNDFILE *wave_in;
   SF_INFO *wave_info;
   
-  // running state
   int sample = 0;
   int pointer = 0;
   
   int i;
   
-  // buffers
   unsigned char *buffer;
   float *wave_buffer;
   unsigned char *firmware;
@@ -67,7 +66,14 @@ int main() {
     exit(1);
   }
   
-  fread(firmware,1,FIRMWARE_SIZE,file);
+  if(fread(buffer,1,FIRMWARE_SIZE,file) < FIRMWARE_SIZE)
+  {
+    printf("Error while reading firmware!\n");
+    free(buffer);
+    fclose(file);
+    return -1;
+  }
+
   fclose(file);
   flip(firmware);
   
@@ -76,20 +82,13 @@ int main() {
     printf("can't open sample list\n");
     exit(1);
   }
-
   
-  
-
-
-  
-  while (fgets(line, 128, file)) {
+  while (fgets(line, 128, file)) 
+  {
 
     centre[0]=0x00;
 
     sscanf(line, "%[^:]:%[^:]:%[^:]:%[^:]", title, centre, filename, t_str);
-    
-    //sscanf(line, "%[^:]:%[^:]:%[^:]", title, centre, filename);
-
 
     if (!(wave_in = sf_open(filename,SFM_READ,wave_info))) {
       printf("Failed to read sample %s\n", filename);
@@ -109,7 +108,7 @@ int main() {
     set_title(firmware, sample+1, title, 1);
 
     printf("pointer = %d (%05x)\nframes = %d (%05x)\n",pointer,pointer,frames, frames);
-    frames += 2; // make sure there are at least two stop bytes
+    frames += 2; /*  make sure there are at least two stop bytes */
     frames = (frames & 0xffff0)+0x10;
     printf("frames = %d (%05x)\n\n",frames, frames);
     
@@ -118,7 +117,7 @@ int main() {
     pointer += frames;
     sample++;
 
-    //printf("%s:\n%d frames\n%d channels\n", title, wave_info->channels, wave_info->frames);
+    /* printf("%s:\n%d frames\n%d channels\n", title, wave_info->channels, wave_info->frames); */
 
   }
 
@@ -142,11 +141,12 @@ int main() {
   fclose(file);
   
   printf("%d samples with total size %d, %d%% used\n",sample, pointer, (int)(pointer/(1024*10.24)));
-    printf("%x\n",firmware);
+  printf("%s\n",firmware);
   free(firmware);
   free(wave_buffer);
   free(buffer);
   free(wave_info);
 
+  return 0;
 }
 

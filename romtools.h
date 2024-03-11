@@ -1,3 +1,6 @@
+#ifndef __ROMTOOLS_H
+#define __ROMTOOLS_H
+
 /* HR16 ROM tools
  * romtools.h - config and settings
  *
@@ -19,6 +22,8 @@
  * MA 02111-1307, USA.
  */
 
-#define FIRMWARE_SIZE 32768
-#define TITLE_ADDR 0x6c4f
-#define OFFSET_ADDR 0x6bfd
+#define FIRMWARE_SIZE   0x8000
+#define TITLE_ADDR      0x6C4F
+#define OFFSET_ADDR     0x6BFD
+
+#endif /* __ROMTOOLS_H */

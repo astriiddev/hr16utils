@@ -22,53 +22,60 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "flip.h"
 #include "romtools.h"
 
-int flip(char *buffer) {
-// reverse the lower 8 bits of the address
-  int ah, al;
-  int i, j,t,u;
-  char *temp;
-  // give ourselves space to work
-  temp = malloc(sizeof(char)*FIRMWARE_SIZE);
-  memcpy(temp, buffer, FIRMWARE_SIZE);
+/*  reverse the lower 8 bits of the address */
+int flip(unsigned char *buffer) 
+{
+  int ah, al, i = 0;
+  unsigned char *temp = NULL;
 
-  for(i=0; i<FIRMWARE_SIZE; i++) {
-    // this will fail for FIRMWARE_SIZE > 0xffff but since we're only dealing with 32kB that's fine
-    ah = i & 0xff00;
-    al = i & 0x00ff;
-    // I'm sure there are more elegant ways to do this
-    u = 0;
-    for (j=0; j<8; j++) {
-      t = al & 1;
-      u = (u << 1) | t;
-      al = al >> 1;
-    }
-    al = u;
-    buffer[ah+al]=temp[i];
+  /*  give ourselves space to work */
+  if((temp = malloc(FIRMWARE_SIZE * sizeof *temp)) == NULL) 
+  {
+    printf("Error while allocating memory!\n");
+    return 0;
   }
+
+  memcpy(temp, buffer, FIRMWARE_SIZE * sizeof *temp);
+
+  for(; i < FIRMWARE_SIZE; i++) 
+  {
+    ah = i & 0xFF00;
+    al = BITFLIP(i & 0x00FF);
+
+    buffer[ah+al] = temp[i];
+  }
+
   free(temp);
+
+  return 1;
 }
 
-int set_title(char *buffer, int sample, char *title, int centre) {
-      int c = 0, l = 0;
-      memset(&buffer[TITLE_ADDR+(16*sample)], ' ', 16);
-      l=strlen(title);
-      if (l>16) l=16;
-      if (centre) c=(16-l)/2;
-      strncpy(&buffer[TITLE_ADDR+(16*sample)+c], title, l);
+void set_title(unsigned char *buffer, int sample, char *title, int centre) 
+{
+    const int l = strlen(title) < 16 ? strlen(title) : 16;
+    const int c = centre ? (16 - l / 2) : 0;
+
+    memset(&buffer[TITLE_ADDR + (16 * sample)], ' ', 16);
+    memcpy(&buffer[TITLE_ADDR + (16 * sample) + c], title, l);
 }
 
-int set_offset(char *buffer, int sample, int offset) {
-  if (sample < 1 || sample > 49) {
-    return 1; // FIXME - define proper error codes
-  }
-  sample -= 1; // run from 0 to 48
-  sample *= 2; // two byte value
-  // should probably check that offset is a multiple of 16, rather than just truncating
+int set_offset(unsigned char *buffer, int sample, int offset) 
+{
+  if (sample < 1 || sample > 49) return 1; /*  FIXME - define proper error codes */
+
+  sample -= 1; /*  run from 0 to 48 */
+  sample *= 2; /*  two byte value */
+  
+  /*  should probably check that offset is a multiple of 16, rather than just truncating */
   offset = offset / 16;
-  buffer[OFFSET_ADDR+sample] = offset/256;
-  buffer[OFFSET_ADDR+sample+1] = offset & 255;
+
+  buffer[OFFSET_ADDR + sample + 0] = offset / 256;
+  buffer[OFFSET_ADDR + sample + 1] = offset & 255;
+
   return 0;
 }
 
